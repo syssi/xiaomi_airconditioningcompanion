@@ -207,11 +207,12 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_TEMPERATURE: state.temperature,
                 ATTR_SWING_MODE: state.swing_mode.name,
                 ATTR_FAN_SPEED: state.fan_speed.name,
-                ATTR_OPERATION_MODE: state.operation_mode.name,
+                ATTR_OPERATION_MODE: state.mode.name,
             }
 
-            self._current_operation = state.operation.name.lower()
-            # BUG? The target_temperature shoudn't be updated here
+            self._current_operation = state.mode.name.lower()
+            # BUG? The target_temperature shoudn't be updated here.
+            # It's fine if state.temperature contains the target temperature.
             # self._target_temperature = state.temperature
 
             if (not self._customize) or (self._customize
