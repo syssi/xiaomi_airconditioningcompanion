@@ -13,7 +13,10 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, ClimateDevice, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, ATTR_OPERATION_MODE, )
+    ATTR_TARGET_TEMP_LOW, ATTR_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_ON_OFF, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, STATE_ON, STATE_OFF,
@@ -56,6 +59,10 @@ ATTR_FAN_SPEED = 'fan_speed'
 DEFAULT_OPERATION_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]
 DEFAULT_SWING_MODES = [STATE_ON, STATE_OFF]
 DEFAULT_FAN_MODES = [STATE_LOW, STATE_MEDIUM, STATE_HIGH, STATE_AUTO]
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE | SUPPORT_SWING_MODE | SUPPORT_ON_OFF)
 
 CONF_SENSOR = 'target_sensor'
 CONF_CUSTOMIZE = 'customize'
@@ -221,6 +228,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):
