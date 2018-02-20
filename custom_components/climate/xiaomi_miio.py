@@ -228,6 +228,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._current_temperature = state.temperature
 
         except DeviceException as ex:
+            self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -259,6 +260,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def name(self):
         """Return the name of the climate device."""
         return self._name
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._state is not None
 
     @property
     def temperature_unit(self):
