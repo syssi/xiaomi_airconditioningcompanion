@@ -11,6 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, ClimateDevice, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, ATTR_OPERATION_MODE,
@@ -55,6 +56,7 @@ ATTR_AIR_CONDITION_MODEL = 'ac_model'
 ATTR_AIR_CONDITION_POWER = 'ac_power'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_FAN_SPEED = 'fan_speed'
+ATTR_LOAD_POWER = 'load_power'
 
 DEFAULT_OPERATION_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]
 DEFAULT_SWING_MODES = [STATE_ON, STATE_OFF]
@@ -107,6 +109,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             ATTR_SWING_MODE: None,
             ATTR_FAN_SPEED: None,
             ATTR_OPERATION_MODE: None,
+            ATTR_LOAD_POWER: None,
         }
 
         self._name = name if name else DEFAULT_NAME
@@ -192,6 +195,24 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             return False
 
     @asyncio.coroutine
+    def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+        """Turn the miio device on."""
+        result = yield from self._try_command(
+            "Turning the miio device on failed.", self._device.on)
+
+        if result:
+            self._state = True
+
+    @asyncio.coroutine
+    def async_turn_off(self: ToggleEntity, **kwargs) -> None:
+        """Turn the miio device off."""
+        result = yield from self._try_command(
+            "Turning the miio device off failed.", self._device.off)
+
+        if result:
+            self._state = False
+
+    @asyncio.coroutine
     def async_update(self):
         """Update the state of this climate device."""
         from miio import DeviceException
@@ -208,6 +229,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_SWING_MODE: state.swing_mode,
                 ATTR_FAN_SPEED: state.fan_speed.name,
                 ATTR_OPERATION_MODE: state.mode.name,
+                ATTR_LOAD_POWER: state.load_power,
             }
 
             self._current_operation = state.mode.name.lower()
