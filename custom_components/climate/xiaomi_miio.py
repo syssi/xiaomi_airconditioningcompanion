@@ -28,7 +28,10 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-miio>=0.3.6']
+# REQUIREMENTS = ['python-miio>=0.3.6']
+REQUIREMENTS = ['https://github.com/rytilahti/python-miio/archive/'
+                'fc5799a05c217be123985f196e71aad57197f11c.zip#'
+                'python-miio']
 
 DEPENDENCIES = ['sensor']
 
@@ -365,7 +368,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
-                kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
+                        kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
