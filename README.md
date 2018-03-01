@@ -7,12 +7,18 @@ Please follow the instructions on [Retrieving the Access Token](https://home-ass
 Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
 
 ## Features
-* On, Off
-* Operation Mode
-* Temperature
-* Speed
-* Swing Mode
-* Fan Mode
+* Power (on, off)
+* Operation Mode (Heat, Cool, Auto, Dehumidify, Ventilate)
+* Fan Speed (Low, Medium, High, Auto)
+* Swing Mode (On, Off)
+* Target Temperature
+* Attributes
+  - ac_model
+  - ac_power (on, off)
+  - load_power (Wh)
+  - operation_mode
+  - fan_speed
+  - swing_mode
 
 ## Setup
 
