@@ -476,8 +476,8 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                     OperationMode[self._current_operation.title()],
                     self._target_temperature,
                     FanSpeed[self._current_fan_mode.title()],
-                    SwingMode[self._current_swing_mode.title(),
-                    Led.Off]
+                    SwingMode[self._current_swing_mode.title()],
+                    Led.Off,
                 ), False)
         else:
             _LOGGER.error('Model number of the air condition unknown. '
