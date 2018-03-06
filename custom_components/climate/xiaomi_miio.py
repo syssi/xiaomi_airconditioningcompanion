@@ -60,6 +60,7 @@ ATTR_AIR_CONDITION_POWER = 'ac_power'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_FAN_SPEED = 'fan_speed'
 ATTR_LOAD_POWER = 'load_power'
+ATTR_LED = 'led'
 
 DEFAULT_OPERATION_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]
 DEFAULT_SWING_MODES = [STATE_ON, STATE_OFF]
@@ -113,7 +114,9 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             ATTR_FAN_SPEED: None,
             ATTR_OPERATION_MODE: None,
             ATTR_LOAD_POWER: None,
+            ATTR_LED: None,
         }
+        self._air_condition_model = None
 
         self._name = name if name else DEFAULT_NAME
         self._unit_of_measurement = TEMP_CELSIUS
@@ -233,7 +236,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_FAN_SPEED: state.fan_speed.name,
                 ATTR_OPERATION_MODE: state.mode.name,
                 ATTR_LOAD_POWER: state.load_power,
+                ATTR_LED: state.led,
             }
+
+            if self._air_condition_model is None:
+                self._air_condition_model = state.air_condition_model
 
             self._current_operation = state.mode.name.lower()
             # BUG? The target_temperature shoudn't be updated here.
@@ -458,18 +465,19 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
 
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
-            Power, OperationMode, FanSpeed, SwingMode
+            Power, OperationMode, FanSpeed, SwingMode, Led
 
-        if ATTR_AIR_CONDITION_MODEL in self._state_attrs:
+        if self._air_condition_model is not None:
             yield from self._try_command(
                 "Sending new air conditioner configuration failed.",
                 self._climate.send_configuration(
-                    self._state_attrs[ATTR_AIR_CONDITION_MODEL],
+                    self._air_condition_model,
                     Power(int(self._state)),
                     OperationMode[self._current_operation.title()],
                     self._target_temperature,
                     FanSpeed[self._current_fan_mode.title()],
-                    SwingMode[self._current_swing_mode.title()]
+                    SwingMode[self._current_swing_mode.title(),
+                    Led.Off]
                 ), False)
         else:
             _LOGGER.error('Model number of the air condition unknown. '
@@ -481,6 +489,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 "Sending new air conditioner configuration failed.",
                 self._climate.send_command(command), False)
         else:
+            # Learned infrared commands has the prefix 'FE'
             yield from self._try_command(
                 "Sending new air conditioner configuration failed.",
                 self._climate.send_ir_code(command), False)
