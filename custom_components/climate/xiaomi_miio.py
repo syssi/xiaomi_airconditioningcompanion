@@ -204,7 +204,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn the miio device on."""
         result = yield from self._try_command(
-            "Turning the miio device on failed.", self._device.on)
+            "Turning the miio device on failed.", self._climate.on)
 
         if result:
             self._state = True
@@ -213,7 +213,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def async_turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn the miio device off."""
         result = yield from self._try_command(
-            "Turning the miio device off failed.", self._device.off)
+            "Turning the miio device off failed.", self._climate.off)
 
         if result:
             self._state = False
@@ -367,6 +367,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def fan_list(self):
         """Return the list of available fan modes."""
         return self._fan_list
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the entity is on"""
+        return self._state
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
