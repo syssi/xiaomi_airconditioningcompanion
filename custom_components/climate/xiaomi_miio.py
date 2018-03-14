@@ -53,7 +53,6 @@ STATE_MEDIUM = 'medium'
 STATE_HIGH = 'high'
 
 ATTR_AIR_CONDITION_MODEL = 'ac_model'
-ATTR_AIR_CONDITION_POWER = 'ac_power'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_FAN_SPEED = 'fan_speed'
 ATTR_LOAD_POWER = 'load_power'
@@ -105,12 +104,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         self._state = None
         self._state_attrs = {
             ATTR_AIR_CONDITION_MODEL: None,
-            ATTR_AIR_CONDITION_POWER: None,
+            ATTR_LOAD_POWER: None,
             ATTR_TEMPERATURE: None,
             ATTR_SWING_MODE: None,
             ATTR_FAN_SPEED: None,
             ATTR_OPERATION_MODE: None,
-            ATTR_LOAD_POWER: None,
             ATTR_LED: None,
         }
         self._air_condition_model = None
@@ -227,12 +225,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._state = state.is_on
             self._state_attrs = {
                 ATTR_AIR_CONDITION_MODEL: state.air_condition_model,
-                ATTR_AIR_CONDITION_POWER: state.air_condition_power,
+                ATTR_LOAD_POWER: state.load_power,
                 ATTR_TEMPERATURE: state.temperature,
                 ATTR_SWING_MODE: state.swing_mode,
                 ATTR_FAN_SPEED: state.fan_speed.name,
                 ATTR_OPERATION_MODE: state.mode.name,
-                ATTR_LOAD_POWER: state.load_power,
                 ATTR_LED: state.led,
             }
 
