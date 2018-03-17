@@ -32,12 +32,4 @@ climate
     token: b7c4a758c251955d2c24b1d9e41ce47d
     target_sensor: sensor.temperature_158d0001f53706
     scan_interval: 60
-    customize:
-      swing:
-        top: 010501820000261801
-        down: FEADASDSDSDSDSDSADSAFADSFASA
-      fan:
-        max: FEADASDSDSDSDSDSADSAFADSFASAD
-        med: FEBDASDSDSDSDSDSADSAFADSFASAR
-        min: 010501A20000261B01
 ```
