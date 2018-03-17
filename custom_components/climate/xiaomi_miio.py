@@ -260,6 +260,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         return True
 
     @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the climate device."""
         return self._name
