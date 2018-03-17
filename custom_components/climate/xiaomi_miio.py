@@ -400,7 +400,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                             self._current_operation == STATE_IDLE):
                 self._current_operation = STATE_AUTO
 
-        self._send_configuration()
+        yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_humidity(self, humidity):
@@ -416,7 +416,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._send_custom_command(
                 self._customize['swing'][self._current_swing_mode])
         else:
-            self._send_configuration()
+            yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
@@ -427,13 +427,13 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._send_custom_command(
                 self._customize['fan'][self._current_fan_mode])
         else:
-            self._send_configuration()
+            yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         self._current_operation = operation_mode
-        self._send_configuration()
+        yield from self._send_configuration()
 
     @property
     def current_swing_mode(self):
@@ -470,6 +470,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         """Turn auxiliary heater off."""
         self._aux = False
 
+    @asyncio.coroutine
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
             Power, OperationMode, FanSpeed, SwingMode, Led
