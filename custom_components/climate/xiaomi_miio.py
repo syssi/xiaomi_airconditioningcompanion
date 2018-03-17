@@ -67,7 +67,6 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
                  SUPPORT_OPERATION_MODE | SUPPORT_SWING_MODE | SUPPORT_ON_OFF)
 
 CONF_SENSOR = 'target_sensor'
-CONF_CUSTOMIZE = 'customize'
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -87,17 +86,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME) or DEFAULT_NAME
     token = config.get(CONF_TOKEN)
     sensor_entity_id = config.get(CONF_SENSOR)
-    customize = config.get(CONF_CUSTOMIZE)
 
     async_add_devices([XiaomiAirConditioningCompanion(
-        hass, name, host, token, sensor_entity_id, customize)],
+        hass, name, host, token, sensor_entity_id)],
         update_before_add=True)
 
 
 class XiaomiAirConditioningCompanion(ClimateDevice):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
-    def __init__(self, hass, name, host, token, sensor_entity_id, customize):
+    def __init__(self, hass, name, host, token, sensor_entity_id):
 
         """Initialize the climate device."""
         self.hass = hass
@@ -119,7 +117,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         self._host = host
         self._token = token
         self._sensor_entity_id = sensor_entity_id
-        self._customize = customize
 
         self._target_temperature = None
         self._target_humidity = None
@@ -139,17 +136,8 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         self._min_temp = DEFAULT_MIN_TEMP - 1
         self._target_temp_step = DEFAULT_STEP
 
-        if self._customize and ('fan' in self._customize):
-            self._customize_fan_list = list(self._customize['fan'])
-            self._fan_list = self._customize_fan_list
-        else:
-            self._fan_list = DEFAULT_FAN_MODES
-
-        if self._customize and ('swing' in self._customize):
-            self._customize_swing_list = list(self._customize['swing'])
-            self._swing_list = self._customize_swing_list
-        else:
-            self._swing_list = DEFAULT_SWING_MODES
+        self._fan_list = DEFAULT_FAN_MODES
+        self._swing_list = DEFAULT_SWING_MODES
 
         if sensor_entity_id:
             async_track_state_change(
@@ -244,14 +232,9 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             # It's fine if state.temperature contains the target temperature.
             # self._target_temperature = state.temperature
 
-            if (not self._customize) or (self._customize
-                                         and 'fan' not in self._customize):
-                self._current_fan_mode = state.fan_speed.name.lower()
-
-            if (not self._customize) or (self._customize
-                                         and 'swing' not in self._customize):
-                self._current_swing_mode = \
-                    STATE_ON if state.swing_mode else STATE_OFF
+            self._current_fan_mode = state.fan_speed.name.lower()
+            self._current_swing_mode = \
+                STATE_ON if state.swing_mode else STATE_OFF
 
             if not self._sensor_entity_id:
                 self._current_temperature = state.temperature
@@ -411,23 +394,13 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def async_set_swing_mode(self, swing_mode):
         """Set target temperature."""
         self._current_swing_mode = swing_mode
-        if self._customize and ('swing' in self._customize) and \
-                (self._current_swing_mode in self._customize['swing']):
-            self._send_custom_command(
-                self._customize['swing'][self._current_swing_mode])
-        else:
-            yield from self._send_configuration()
+        yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
         """Set the fan mode."""
         self._current_fan_mode = fan
-        if self._customize and ('fan' in self._customize) and \
-                (self._current_fan_mode in self._customize['fan']):
-            self._send_custom_command(
-                self._customize['fan'][self._current_fan_mode])
-        else:
-            yield from self._send_configuration()
+        yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
