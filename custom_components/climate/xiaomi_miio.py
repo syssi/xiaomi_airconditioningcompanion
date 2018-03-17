@@ -238,6 +238,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             })
 
             self._current_operation = state.mode.name.lower()
+            # The property is called "target_temperature" with python-miio 0.3.9
             self._target_temperature = state.temperature
 
             self._current_fan_mode = state.fan_speed.name.lower()
