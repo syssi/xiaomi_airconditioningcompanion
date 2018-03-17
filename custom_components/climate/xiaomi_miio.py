@@ -101,6 +101,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
 
         """Initialize the climate device."""
         self.hass = hass
+        self._available = False
         self._state = None
         self._state_attrs = {
             ATTR_AIR_CONDITION_MODEL: None,
@@ -193,6 +194,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             return result == SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
+            self._available = False
             return False
 
     @asyncio.coroutine
@@ -222,8 +224,9 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             state = yield from self.hass.async_add_job(self._climate.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
-            self._state_attrs = {
+            self._state_attrs.update({
                 ATTR_AIR_CONDITION_MODEL: state.air_condition_model,
                 ATTR_LOAD_POWER: state.load_power,
                 ATTR_TEMPERATURE: state.temperature,
@@ -231,7 +234,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_FAN_SPEED: state.fan_speed.name,
                 ATTR_OPERATION_MODE: state.mode.name,
                 ATTR_LED: state.led,
-            }
+            })
 
             if self._air_condition_model is None:
                 self._air_condition_model = state.air_condition_model
@@ -254,7 +257,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._current_temperature = state.temperature
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -290,7 +293,12 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._state is not None
+        return self._available
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._state_attrs
 
     @property
     def temperature_unit(self):
