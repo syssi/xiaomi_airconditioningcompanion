@@ -312,7 +312,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
 
     @property
     def is_on(self) -> bool:
-        """Return True if the entity is on"""
+        """Return True if the entity is on."""
         return self._state
 
     @asyncio.coroutine
@@ -366,10 +366,10 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._device.send_configuration,
                 self._air_condition_model,
                 Power(int(self._state)),
-                OperationMode[self._current_operation.title()],
+                OperationMode[self._current_operation],
                 self._target_temperature,
-                FanSpeed[self._current_fan_mode.title()],
-                SwingMode[self._current_swing_mode.title()],
+                FanSpeed[self._current_fan_mode],
+                SwingMode[self._current_swing_mode],
                 Led.Off,
             )
         else:
