@@ -11,17 +11,13 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, ClimateDevice, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, ATTR_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_ON_OFF, )
+    ClimateDevice, PLATFORM_SCHEMA, ATTR_OPERATION_MODE, SUPPORT_ON_OFF,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, STATE_ON, STATE_OFF,
-    STATE_IDLE, )
+    CONF_NAME, CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
@@ -34,12 +30,8 @@ DEPENDENCIES = ['sensor']
 
 SUCCESS = ['ok']
 
-DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = 'Xiaomi AC Companion'
-
-DEFAULT_MIN_TEMP = 16
-DEFAULT_MAX_TEMP = 30
-DEFAULT_STEP = 1
+TARGET_TEMPERATURE_STEP = 1
 
 ATTR_AIR_CONDITION_MODEL = 'ac_model'
 ATTR_SWING_MODE = 'swing_mode'
@@ -47,11 +39,15 @@ ATTR_FAN_SPEED = 'fan_speed'
 ATTR_LOAD_POWER = 'load_power'
 ATTR_LED = 'led'
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE | SUPPORT_SWING_MODE | SUPPORT_ON_OFF)
+SUPPORT_FLAGS = (SUPPORT_ON_OFF |
+                 SUPPORT_TARGET_TEMPERATURE |
+                 SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE |
+                 SUPPORT_SWING_MODE)
 
 CONF_SENSOR = 'target_sensor'
+CONF_MIN_TEMP = 'min_temp'
+CONF_MAX_TEMP = 'max_temp'
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -60,6 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Required(CONF_SENSOR): cv.entity_id,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MIN_TEMP, default=16): vol.Coerce(int),
+    vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
 })
 
 
@@ -72,6 +70,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
+    min_temp = config.get(CONF_MIN_TEMP)
+    max_temp = config.get(CONF_MAX_TEMP)
     sensor_entity_id = config.get(CONF_SENSOR)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -90,14 +90,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         raise PlatformNotReady
 
     async_add_devices([XiaomiAirConditioningCompanion(
-        hass, name, device, unique_id, sensor_entity_id)],
+        hass, name, device, unique_id, sensor_entity_id, min_temp, max_temp)],
         update_before_add=True)
 
 
 class XiaomiAirConditioningCompanion(ClimateDevice):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
-    def __init__(self, hass, name, device, unique_id, sensor_entity_id):
+    def __init__(self, hass, name, device, unique_id, sensor_entity_id,
+                 min_temp, max_temp):
 
         """Initialize the climate device."""
         self.hass = hass
@@ -118,21 +119,14 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             ATTR_LED: None,
         }
 
-        self._unit_of_measurement = TEMP_CELSIUS
-        self._target_temperature_high = DEFAULT_MAX_TEMP
-        self._target_temperature_low = DEFAULT_MIN_TEMP
-        self._max_temp = DEFAULT_MAX_TEMP + 1
-        self._min_temp = DEFAULT_MIN_TEMP - 1
-        self._target_temp_step = DEFAULT_STEP
-
-        self._air_condition_model = None
-        self._target_temperature = None
-        self._target_humidity = None
+        self._max_temp = max_temp
+        self._min_temp = min_temp
         self._current_temperature = None
-        self._current_humidity = None
         self._current_swing_mode = None
         self._current_operation = None
         self._current_fan_mode = None
+        self._air_condition_model = None
+        self._target_temperature = None
 
         if sensor_entity_id:
             async_track_state_change(
@@ -252,7 +246,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the target temperature step."""
-        return self._target_temp_step
+        return TARGET_TEMPERATURE_STEP
 
     @property
     def should_poll(self):
@@ -282,7 +276,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -293,26 +287,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
-
-    @property
-    def target_temperature_high(self):
-        """Return the upper bound of the target temperature we try to reach."""
-        return self._target_temperature_high
-
-    @property
-    def target_temperature_low(self):
-        """Return the lower bound of the target temperature we try to reach."""
-        return self._target_temperature_low
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return self._current_humidity
-
-    @property
-    def target_humidity(self):
-        """Return the humidity we try to reach."""
-        return self._target_humidity
 
     @property
     def current_operation(self):
@@ -347,26 +321,10 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
-            self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
             self._current_operation = kwargs.get(ATTR_OPERATION_MODE)
-        else:
-            if self._target_temperature < self._target_temperature_low:
-                self._target_temperature = self._target_temperature_low
-            elif self._target_temperature > self._target_temperature_high:
-                self._target_temperature = self._target_temperature_high
 
         yield from self._send_configuration()
-
-    @asyncio.coroutine
-    def async_set_humidity(self, humidity):
-        """Set the target humidity."""
-        self._target_humidity = humidity
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
