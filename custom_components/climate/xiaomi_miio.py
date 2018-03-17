@@ -238,9 +238,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             })
 
             self._current_operation = state.mode.name.lower()
-            # BUG? The target_temperature shoudn't be updated here.
-            # It's fine if state.temperature contains the target temperature.
-            # self._target_temperature = state.temperature
+            self._target_temperature = state.temperature
 
             self._current_fan_mode = state.fan_speed.name.lower()
             self._current_swing_mode = \
