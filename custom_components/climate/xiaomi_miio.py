@@ -203,23 +203,17 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_AIR_CONDITION_MODEL: state.air_condition_model,
                 ATTR_LOAD_POWER: state.load_power,
                 ATTR_TEMPERATURE: state.temperature,
-                # TODO: Refactor swing_mode
-                ATTR_SWING_MODE: SwingMode.On.name if state.swing_mode else SwingMode.Off.name,
+                ATTR_SWING_MODE: state.swing_mode.name,
                 ATTR_FAN_SPEED: state.fan_speed.name,
                 ATTR_OPERATION_MODE: state.mode.name,
                 ATTR_LED: state.led,
             })
 
             self._current_operation = state.mode.name.lower()
-            # FIXME: The property is called "target_temperature" with python-miio 0.3.9
-            self._target_temperature = state.temperature
+            self._target_temperature = state.target_temperature
 
             self._current_fan_mode = state.fan_speed.name
-            self._current_swing_mode = \
-                SwingMode.On.name if state.swing_mode else SwingMode.Off.name
-
-            if not self._sensor_entity_id:
-                self._current_temperature = state.temperature
+            self._current_swing_mode = state.swing_mode.name
 
             if self._air_condition_model is None:
                 self._air_condition_model = state.air_condition_model
