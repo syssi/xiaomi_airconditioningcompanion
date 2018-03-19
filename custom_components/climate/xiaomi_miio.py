@@ -218,9 +218,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._current_swing_mode = \
                 SwingMode.On.name if state.swing_mode else SwingMode.Off.name
 
-            if not self._sensor_entity_id:
-                self._current_temperature = state.temperature
-
             if self._air_condition_model is None:
                 self._air_condition_model = state.air_condition_model
 
