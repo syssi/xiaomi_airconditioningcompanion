@@ -138,6 +138,9 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @callback
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
+        if state.state is None or state.state == 'unknown':
+            return
+
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         try:
