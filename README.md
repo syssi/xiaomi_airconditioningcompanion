@@ -1,6 +1,12 @@
 # Xiaomi Mi and Aqara Air Conditioning Companion
 
-This is a custom component for home assistant to integrate the Xiaomi Mi and Aqara Air Conditioning Companion (KTBL01LM, KTBL02LM).
+This is a custom component for home assistant to integrate the Xiaomi Mi and Aqara Air Conditioning Companion:
+
+| Model ID          | Model number | Product name                            | Shape    |
+|-------------------|--------------|-----------------------------------------|----------|
+| `acpartner.v1`    | KTBL01LM     | Aqara Air Conditioning Companion        | square   |
+| `acaprtner.v2`    | KTBL02LM     | Xiaomi Mi Air Conditioner Companion     | round    |
+| `acpartner.v3`    | KTBL11LM     | Aqara Air Conditioning Companion        | square   |
 
 Please follow the instructions on [Retrieving the Access Token](https://home-assistant.io/components/xiaomi/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
 
