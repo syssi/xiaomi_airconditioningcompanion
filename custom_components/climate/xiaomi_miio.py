@@ -212,7 +212,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_LED: state.led,
             })
 
-            self._current_operation = state.mode.name.lower()
+            self._current_operation = state.mode.name
             self._target_temperature = state.target_temperature
 
             self._current_fan_mode = state.fan_speed.name
