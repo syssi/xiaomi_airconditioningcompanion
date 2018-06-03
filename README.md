@@ -31,7 +31,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 ```yaml
 # configuration.yaml
 
-climate
+climate:
   - platform: xiaomi_miio
     name: Aqara Air Conditioning Companion
     host: 192.168.130.71
