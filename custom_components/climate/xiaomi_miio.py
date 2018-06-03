@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-miio>=0.3.9']
+REQUIREMENTS = ['python-miio>=0.4.0']
 
 DEPENDENCIES = ['sensor']
 
