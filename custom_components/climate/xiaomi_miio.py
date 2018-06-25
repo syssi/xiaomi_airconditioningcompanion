@@ -203,7 +203,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._available = True
             self._state = state.is_on
             self._state_attrs.update({
-                ATTR_AIR_CONDITION_MODEL: state.air_condition_model,
+                ATTR_AIR_CONDITION_MODEL: state.air_condition_model.hex(),
                 ATTR_LOAD_POWER: state.load_power,
                 ATTR_TEMPERATURE: state.target_temperature,
                 ATTR_SWING_MODE: state.swing_mode.name,
