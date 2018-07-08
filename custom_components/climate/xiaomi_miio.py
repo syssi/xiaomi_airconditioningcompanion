@@ -219,7 +219,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             self._current_swing_mode = state.swing_mode.name
 
             if self._air_condition_model is None:
-                self._air_condition_model = state.air_condition_model
+                self._air_condition_model = state.air_condition_model.hex()
 
         except DeviceException as ex:
             self._available = False
@@ -364,7 +364,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._air_condition_model,
                 Power(int(self._state)),
                 OperationMode[self._current_operation],
-                self._target_temperature,
+                int(self._target_temperature),
                 FanSpeed[self._current_fan_mode],
                 SwingMode[self._current_swing_mode],
                 Led.Off,
