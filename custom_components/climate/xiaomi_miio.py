@@ -14,13 +14,14 @@ from homeassistant.core import callback
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_OPERATION_MODE, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE, )
+    SUPPORT_SWING_MODE, DOMAIN, )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, )
+    CONF_NAME, CONF_HOST, CONF_TOKEN, ATTR_ENTITY_ID, CONF_TIMEOUT, )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,11 @@ DEPENDENCIES = ['sensor']
 SUCCESS = ['ok']
 
 DEFAULT_NAME = 'Xiaomi AC Companion'
+DATA_KEY = 'climate.xiaomi_miio'
 TARGET_TEMPERATURE_STEP = 1
+
+DEFAULT_TIMEOUT = 10
+DEFAULT_SLOT = 1
 
 ATTR_AIR_CONDITION_MODEL = 'ac_model'
 ATTR_SWING_MODE = 'swing_mode'
@@ -48,6 +53,8 @@ SUPPORT_FLAGS = (SUPPORT_ON_OFF |
 CONF_SENSOR = 'target_sensor'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
+CONF_SLOT = 'slot'
+CONF_COMMAND = 'command'
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -60,12 +67,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
 })
 
+SERVICE_LEARN_COMMAND = 'xiaomi_miio_learn_command'
+SERVICE_SEND_COMMAND = 'xiaomi_miio_send_command'
+
+SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+SERVICE_SCHEMA_LEARN_COMMAND = SERVICE_SCHEMA.extend({
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+        vol.All(int, vol.Range(min=0)),
+    vol.Optional(CONF_SLOT, default=DEFAULT_SLOT):
+        vol.All(int, vol.Range(min=1, max=1000000)),
+})
+
+SERVICE_SCHEMA_SEND_COMMAND = SERVICE_SCHEMA.extend({
+    vol.Optional(CONF_COMMAND): cv.string,
+})
+
+SERVICE_TO_METHOD = {
+    SERVICE_LEARN_COMMAND: {'method': 'async_learn_command',
+                            'schema': SERVICE_SCHEMA_LEARN_COMMAND},
+    SERVICE_SEND_COMMAND: {'method': 'async_send_command',
+                           'schema': SERVICE_SCHEMA_SEND_COMMAND},
+}
+
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the air conditioning companion from config."""
     from miio import AirConditioningCompanion, DeviceException
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -89,9 +123,37 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
         raise PlatformNotReady
 
-    async_add_devices([XiaomiAirConditioningCompanion(
-        hass, name, device, unique_id, sensor_entity_id, min_temp, max_temp)],
-        update_before_add=True)
+    air_conditioning_companion = XiaomiAirConditioningCompanion(
+        hass, name, device, unique_id, sensor_entity_id, min_temp, max_temp)
+    hass.data[DATA_KEY][host] = air_conditioning_companion
+    async_add_devices([air_conditioning_companion], update_before_add=True)
+
+    async def async_service_handler(service):
+        """Map services to methods on XiaomiAirConditioningCompanion."""
+        method = SERVICE_TO_METHOD.get(service.service)
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_KEY].values() if
+                       device.entity_id in entity_ids]
+        else:
+            devices = hass.data[DATA_KEY].values()
+
+        update_tasks = []
+        for device in devices:
+            if not hasattr(device, method['method']):
+                continue
+            await getattr(device, method['method'])(**params)
+            update_tasks.append(device.async_update_ha_state(True))
+
+        if update_tasks:
+            await asyncio.wait(update_tasks, loop=hass.loop)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service].get('schema', SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler, schema=schema)
 
 
 class XiaomiAirConditioningCompanion(ClimateDevice):
@@ -378,13 +440,50 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             _LOGGER.error('Model number of the air condition unknown. '
                           'Configuration cannot be sent.')
 
-    def _send_custom_command(self, command: str):
-        if command[0:2] == "01":
+    @asyncio.coroutine
+    def async_learn_command(self, slot, timeout):
+        """Learn a infrared command."""
+        yield from self.hass.async_add_job(self._device.learn, slot)
+
+        _LOGGER.info("Press the key you want Home Assistant to learn")
+        start_time = utcnow()
+        while (utcnow() - start_time) < timedelta(seconds=timeout):
+            message = yield from self.hass.async_add_job(
+                self._device.learn_result)
+            # FIXME: Improve python-miio here?
+            message = message[0]
+            _LOGGER.debug("Message received from device: '%s'", message)
+            if message.startswith('FE'):
+                log_msg = "Received command is: {}".format(message)
+                _LOGGER.info(log_msg)
+                self.hass.components.persistent_notification.async_create(
+                    log_msg, title='Xiaomi Miio Remote')
+                yield from self.hass.async_add_job(self._device.learn_stop, slot)
+                return
+
+            yield from asyncio.sleep(1, loop=self.hass.loop)
+
+        yield from self.hass.async_add_job(self._device.learn_stop, slot)
+        _LOGGER.error("Timeout. No infrared command captured")
+        self.hass.components.persistent_notification.async_create(
+            "Timeout. No infrared command captured",
+            title='Xiaomi Miio Remote')
+
+    @asyncio.coroutine
+    def async_send_command(self, command):
+        """Send a infrared command."""
+        if command.startswith('01'):
             yield from self._try_command(
                 "Sending new air conditioner configuration failed.",
                 self._device.send_command, command)
+        elif command.startswith('FE'):
+            if self._air_condition_model is not None:
+                # Learned infrared commands has the prefix 'FE'
+                yield from self._try_command(
+                    "Sending custom infrared command failed.",
+                    self._device.send_ir_code, self._air_condition_model, command)
+            else:
+                _LOGGER.error('Model number of the air condition unknown. '
+                              'IR command cannot be sent.')
         else:
-            # Learned infrared commands has the prefix 'FE'
-            yield from self._try_command(
-                "Sending new air conditioner configuration failed.",
-                self._device.send_ir_code, command)
+            _LOGGER.error('Invalid IR command.')
