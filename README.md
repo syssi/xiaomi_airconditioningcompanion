@@ -18,6 +18,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 * Fan Speed (Low, Medium, High, Auto)
 * Swing Mode (On, Off)
 * Target Temperature
+* Capture and replay infrared commands
 * Attributes
   - ac_model
   - ac_power (on, off)
@@ -39,3 +40,24 @@ climate:
     target_sensor: sensor.temperature_158d0001f53706
     scan_interval: 60
 ```
+
+## Platform services
+
+#### Service `climate.xiaomi_miio_learn_command`
+
+Capture an infrared command.
+
+| Service data attribute    | Optional | Description                                                          |
+|---------------------------|----------|----------------------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `slot`                    |      yes | Storage slot. Defaults to slot ID 1.                                 |
+| `timeout`                 |      yes | Capturing timeout. Defaults to 10 seconds.                           |
+
+#### Service `climate.xiaomi_miio_send_command`
+
+Send captured infrared command or device configuration.
+
+| Service data attribute    | Optional | Description                                                          |
+|---------------------------|----------|----------------------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `command`                 |       no | Infrared command. Must start with `FE` or `01`.                      |
