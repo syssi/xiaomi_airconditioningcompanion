@@ -212,11 +212,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_LED: state.led,
             })
 
-            self._current_operation = state.mode.name
+            self._current_operation = state.mode
             self._target_temperature = state.target_temperature
 
-            self._current_fan_mode = state.fan_speed.name
-            self._current_swing_mode = state.swing_mode.name
+            self._current_fan_mode = state.fan_speed
+            self._current_swing_mode = state.swing_mode
 
             if self._air_condition_model is None:
                 self._air_condition_model = state.air_condition_model.hex()
@@ -288,7 +288,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        return self._current_operation.name
 
     @property
     def operation_list(self):
@@ -299,7 +299,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return the current fan mode."""
-        return self._current_fan_mode
+        return self._current_fan_mode.name
 
     @property
     def fan_list(self):
@@ -315,36 +315,41 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set target temperature."""
+        from miio.airconditioningcompanion import OperationMode
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
-            self._current_operation = kwargs.get(ATTR_OPERATION_MODE)
+            self._current_operation = OperationMode[
+                kwargs.get(ATTR_OPERATION_MODE).title()]
 
         yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
         """Set target temperature."""
-        self._current_swing_mode = swing_mode
+        from miio.airconditioningcompanion import SwingMode
+        self._current_swing_mode = SwingMode[swing_mode.title()]
         yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
         """Set the fan mode."""
-        self._current_fan_mode = fan
+        from miio.airconditioningcompanion import FanSpeed
+        self._current_fan_mode = FanSpeed[fan.title()]
         yield from self._send_configuration()
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        self._current_operation = operation_mode
+        from miio.airconditioningcompanion import OperationMode
+        self._current_operation = OperationMode[operation_mode.title()]
         yield from self._send_configuration()
 
     @property
     def current_swing_mode(self):
         """Return the current swing setting."""
-        return self._current_swing_mode
+        return self._current_swing_mode.name
 
     @property
     def swing_list(self):
@@ -355,7 +360,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @asyncio.coroutine
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
-            Power, OperationMode, FanSpeed, SwingMode, Led
+            Power, FanSpeed, SwingMode, Led
 
         if self._air_condition_model is not None:
             yield from self._try_command(
@@ -363,10 +368,10 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._device.send_configuration,
                 self._air_condition_model,
                 Power(int(self._state)),
-                OperationMode[self._current_operation],
+                self._current_operation,
                 int(self._target_temperature),
-                FanSpeed[self._current_fan_mode],
-                SwingMode[self._current_swing_mode],
+                self._current_fan_mode,
+                self._current_swing_mode,
                 Led.Off,
             )
         else:
