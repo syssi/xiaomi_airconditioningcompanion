@@ -389,7 +389,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
-        """Set target temperature."""
+        """Set the swing mode."""
         from miio.airconditioningcompanion import SwingMode
         self._current_swing_mode = SwingMode[swing_mode.title()]
         yield from self._send_configuration()
