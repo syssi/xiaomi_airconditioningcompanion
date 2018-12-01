@@ -41,6 +41,20 @@ climate:
     scan_interval: 60
 ```
 
+## Debugging
+
+If the custom component doesn't work out of the box for your device please update your configuration to enable a higher log level:
+
+```yaml
+# configuration.yaml
+
+logger:
+  default: warn
+  logs:
+    custom_components.climate.xiaomi_miio: debug
+    miio: debug
+```
+
 ## Platform services
 
 #### Service `climate.xiaomi_miio_learn_command`
