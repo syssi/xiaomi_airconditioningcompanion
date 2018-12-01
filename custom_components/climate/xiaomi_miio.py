@@ -78,7 +78,7 @@ SERVICE_SCHEMA_LEARN_COMMAND = SERVICE_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
         vol.All(int, vol.Range(min=0)),
     vol.Optional(CONF_SLOT, default=DEFAULT_SLOT):
-        vol.All(int, vol.Range(min=1, max=1000000)),
+        vol.All(int, vol.Range(min=2, max=1000000)),
 })
 
 SERVICE_SCHEMA_SEND_COMMAND = SERVICE_SCHEMA.extend({

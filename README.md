@@ -64,7 +64,7 @@ Capture an infrared command.
 | Service data attribute    | Optional | Description                                                          |
 |---------------------------|----------|----------------------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
-| `slot`                    |      yes | Storage slot. Defaults to slot ID 1.                                 |
+| `slot`                    |      yes | Storage slot. Defaults to slot ID 30.                                |
 | `timeout`                 |      yes | Capturing timeout. Defaults to 10 seconds.                           |
 
 #### Service `climate.xiaomi_miio_send_command`
