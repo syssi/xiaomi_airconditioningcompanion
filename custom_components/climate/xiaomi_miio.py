@@ -395,10 +395,10 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         yield from self._send_configuration()
 
     @asyncio.coroutine
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
         from miio.airconditioningcompanion import FanSpeed
-        self._current_fan_mode = FanSpeed[fan.title()]
+        self._current_fan_mode = FanSpeed[fan_mode.title()]
         yield from self._send_configuration()
 
     @asyncio.coroutine
