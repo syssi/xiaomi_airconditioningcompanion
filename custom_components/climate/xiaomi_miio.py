@@ -256,7 +256,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     def async_update(self):
         """Update the state of this climate device."""
         from miio import DeviceException
-        from miio.airconditioningcompanion import SwingMode
 
         try:
             state = yield from self.hass.async_add_job(self._device.status)
@@ -350,24 +349,24 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation.name
+        return self._current_operation.name.lower()
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
         from miio.airconditioningcompanion import OperationMode
-        return [mode.name for mode in OperationMode]
+        return [mode.name.lower() for mode in OperationMode]
 
     @property
     def current_fan_mode(self):
         """Return the current fan mode."""
-        return self._current_fan_mode.name
+        return self._current_fan_mode.name.lower()
 
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
         from miio.airconditioningcompanion import FanSpeed
-        return [speed.name for speed in FanSpeed]
+        return [speed.name.lower() for speed in FanSpeed]
 
     @property
     def is_on(self) -> bool:
@@ -411,18 +410,18 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def current_swing_mode(self):
         """Return the current swing setting."""
-        return self._current_swing_mode.name
+        return self._current_swing_mode.name.lower()
 
     @property
     def swing_list(self):
         """List of available swing modes."""
         from miio.airconditioningcompanion import SwingMode
-        return [mode.name for mode in SwingMode]
+        return [mode.name.lower() for mode in SwingMode]
 
     @asyncio.coroutine
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
-            Power, FanSpeed, SwingMode, Led
+            Power, Led
 
         if self._air_condition_model is not None:
             yield from self._try_command(
