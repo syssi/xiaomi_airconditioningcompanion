@@ -40,7 +40,7 @@ DEFAULT_SLOT = 30
 
 ATTR_AIR_CONDITION_MODEL = 'ac_model'
 ATTR_SWING_MODE = 'swing_mode'
-ATTR_FAN_SPEED = 'fan_speed'
+ATTR_FAN_MODE = 'fan_mode'
 ATTR_LOAD_POWER = 'load_power'
 ATTR_LED = 'led'
 
@@ -176,7 +176,6 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             ATTR_LOAD_POWER: None,
             ATTR_TEMPERATURE: None,
             ATTR_SWING_MODE: None,
-            ATTR_FAN_SPEED: None,
             ATTR_OPERATION_MODE: None,
             ATTR_LED: None,
         }
@@ -267,9 +266,9 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_AIR_CONDITION_MODEL: state.air_condition_model.hex(),
                 ATTR_LOAD_POWER: state.load_power,
                 ATTR_TEMPERATURE: state.target_temperature,
-                ATTR_SWING_MODE: state.swing_mode.name,
-                ATTR_FAN_SPEED: state.fan_speed.name,
-                ATTR_OPERATION_MODE: state.mode.name,
+                ATTR_SWING_MODE: state.swing_mode.name.lower(),
+                ATTR_FAN_MODE: state.fan_speed.name.lower(),
+                ATTR_OPERATION_MODE: state.mode.name.lower(),
                 ATTR_LED: state.led,
             })
 
