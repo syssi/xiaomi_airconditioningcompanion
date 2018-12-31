@@ -41,6 +41,8 @@ climate:
     scan_interval: 60
 ```
 
+![climate entity](climate.png "climate entity")
+
 ## Debugging
 
 If the custom component doesn't work out of the box for your device please update your configuration to enable a higher log level:
