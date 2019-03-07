@@ -12,12 +12,13 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, ATTR_OPERATION_MODE, SUPPORT_ON_OFF,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE, DOMAIN, )
+    ClimateDevice, PLATFORM_SCHEMA, )
+from homeassistant.components.climate.const import (
+    ATTR_OPERATION_MODE, DOMAIN, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, ATTR_ENTITY_ID, CONF_TIMEOUT, )
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME,
+    CONF_HOST, CONF_TOKEN, CONF_TIMEOUT, TEMP_CELSIUS, )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
