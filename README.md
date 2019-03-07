@@ -33,7 +33,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 # configuration.yaml
 
 climate:
-  - platform: xiaomi_miio
+  - platform: xiaomi_miio_airconditioningcompanion
     name: Aqara Air Conditioning Companion
     host: 192.168.130.71
     token: b7c4a758c251955d2c24b1d9e41ce47d
@@ -53,7 +53,7 @@ If the custom component doesn't work out of the box for your device please updat
 logger:
   default: warn
   logs:
-    custom_components.climate.xiaomi_miio: debug
+    custom_components.xiaomi_miio_airconditioningcompanion.climate: debug
     miio: debug
 ```
 
