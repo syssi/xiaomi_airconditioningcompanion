@@ -26,10 +26,6 @@ from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-miio>=0.4.0']
-
-DEPENDENCIES = ['sensor']
-
 SUCCESS = ['ok']
 
 DEFAULT_NAME = 'Xiaomi AC Companion'

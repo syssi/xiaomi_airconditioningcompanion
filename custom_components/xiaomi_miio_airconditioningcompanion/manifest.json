@@ -1,8 +1,13 @@
 {
   "domain": "xiaomi_miio_airconditioningcompanion",
-  "name": "AC Companion",
-  "documentation": "",
+  "name": "Xiaomi Mi and Aqara Air Conditioning Companion",
+  "documentation": "https://github.com/syssi/xiaomi_airconditioningcompanion",
+  "requirements": [
+    "construct==2.9.45",
+    "python-miio==0.4.5"
+  ],
   "dependencies": ["sensor"],
-  "codeowners": [],
-  "requirements": ["python-miio>=0.4.0"]
+  "codeowners": [
+    "@syssi"
+  ]
 }
