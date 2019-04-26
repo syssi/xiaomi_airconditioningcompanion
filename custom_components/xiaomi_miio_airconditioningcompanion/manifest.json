@@ -1,0 +1,8 @@
+{
+  "domain": "xiaomi_miio_airconditioningcompanion",
+  "name": "AC Companion",
+  "documentation": "",
+  "dependencies": ["sensor"],
+  "codeowners": [],
+  "requirements": ["python-miio>=0.4.0"]
+}
