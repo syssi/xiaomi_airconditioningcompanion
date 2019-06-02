@@ -4,6 +4,7 @@ Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner)
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.xiaomi_miio
 """
+import enum
 import logging
 import asyncio
 from functools import partial
@@ -153,6 +154,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             DOMAIN, service, async_service_handler, schema=schema)
 
 
+class OperationMode(enum.Enum):
+    Heat = 'heat'
+    Cool = 'cool'
+    Auto = 'auto'
+    Dehumidify = 'dry'
+    Ventilate = 'fan_only'
+    Off = 'off'
+
+
 class XiaomiAirConditioningCompanion(ClimateDevice):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
@@ -269,7 +279,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 ATTR_LED: state.led,
             })
 
-            self._current_operation = state.mode
+            self._current_operation = OperationMode[state.mode.name].value
             self._target_temperature = state.target_temperature
 
             self._current_fan_mode = state.fan_speed
@@ -345,13 +355,12 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation.name.lower() if self._state else "off"
+        return self._current_operation
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        from miio.airconditioningcompanion import OperationMode
-        return [mode.name.lower() for mode in OperationMode] + ["off"]
+        return [mode.value for mode in OperationMode]
 
     @property
     def current_fan_mode(self):
@@ -372,13 +381,11 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set target temperature."""
-        from miio.airconditioningcompanion import OperationMode
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
-            self._current_operation = OperationMode[
-                kwargs.get(ATTR_OPERATION_MODE).title()]
+            self._current_operation = OperationMode(kwargs.get(ATTR_OPERATION_MODE))
 
         yield from self._send_configuration()
 
@@ -399,11 +406,10 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        if operation_mode == "off":
+        if operation_mode == OperationMode.Off.value:
             self._state = False
         else:
-            from miio.airconditioningcompanion import OperationMode
-            self._current_operation = OperationMode[operation_mode.title()]
+            self._current_operation = OperationMode(operation_mode).value
             self._state = True
         yield from self._send_configuration()
 
@@ -421,7 +427,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     @asyncio.coroutine
     def _send_configuration(self):
         from miio.airconditioningcompanion import \
-            Power, Led
+            Power, Led, OperationMode as MiioOperationMode
 
         if self._air_condition_model is not None:
             yield from self._try_command(
@@ -429,7 +435,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
                 self._device.send_configuration,
                 self._air_condition_model,
                 Power(int(self._state)),
-                self._current_operation,
+                MiioOperationMode[OperationMode(self._current_operation).name],
                 int(self._target_temperature),
                 self._current_fan_mode,
                 self._current_swing_mode,
