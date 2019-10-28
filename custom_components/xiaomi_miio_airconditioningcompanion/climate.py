@@ -13,6 +13,9 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    STATE_ON
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     DOMAIN,
@@ -66,6 +69,7 @@ CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 CONF_SLOT = "slot"
 CONF_COMMAND = "command"
+CONF_POWER_SENSOR = "power_sensor"
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -77,6 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MIN_TEMP, default=16): vol.Coerce(int),
         vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
+        vol.Optional(CONF_POWER_SENSOR): cv.entity_id
     }
 )
 
@@ -127,6 +132,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     min_temp = config.get(CONF_MIN_TEMP)
     max_temp = config.get(CONF_MAX_TEMP)
     sensor_entity_id = config.get(CONF_SENSOR)
+    power_sensor_entity_id = config.get(CONF_POWER_SENSOR)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -146,7 +152,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         raise PlatformNotReady
 
     air_conditioning_companion = XiaomiAirConditioningCompanion(
-        hass, name, device, unique_id, sensor_entity_id, min_temp, max_temp
+        hass, name, device, unique_id, sensor_entity_id, power_sensor_entity_id, min_temp, max_temp
     )
     hass.data[DATA_KEY][host] = air_conditioning_companion
     async_add_devices([air_conditioning_companion], update_before_add=True)
@@ -197,7 +203,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
     def __init__(
-        self, hass, name, device, unique_id, sensor_entity_id, min_temp, max_temp
+        self, hass, name, device, unique_id, sensor_entity_id, power_sensor_entity_id, min_temp, max_temp
     ):
 
         """Initialize the climate device."""
@@ -206,6 +212,7 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         self._device = device
         self._unique_id = unique_id
         self._sensor_entity_id = sensor_entity_id
+        self._power_sensor_entity_id = power_sensor_entity_id
 
         self._available = False
         self._state = None
@@ -234,6 +241,12 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
             if sensor_state:
                 self._async_update_temp(sensor_state)
 
+        if power_sensor_entity_id:
+            async_track_state_change(hass, power_sensor_entity_id, self._async_power_sensor_changed)
+            sensor_state = hass.states.get(power_sensor_entity_id)
+            if sensor_state:
+                self._async_update_power_state(sensor_state)
+
     @callback
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
@@ -249,12 +262,30 @@ class XiaomiAirConditioningCompanion(ClimateDevice):
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
+    @callback
+    def _async_update_power_state(self, state):
+        """Update thermostat with latest state from power sensor."""
+        if state.state is None:
+            return
+        if state.state == STATE_ON:
+            yield from self.async_turn_on()
+        else:
+            yield from self.async_turn_off()
+
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
         if new_state is None:
             return
         self._async_update_temp(new_state)
+
+    @asyncio.coroutine
+    def _async_power_sensor_changed(self, entity_id, old_state, new_state):
+        """Handle power sensor changes."""
+        if new_state is None:
+            return
+
+        yield from self._async_update_power_state(new_state)
 
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
