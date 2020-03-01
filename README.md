@@ -27,6 +27,12 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
   - fan_speed
   - swing_mode
 
+
+## Install
+
+You can install this custom component by adding this repository ([https://github.com/syssi/xiaomi_airconditioningcompanion](https://github.com/syssi/xiaomi_airconditioningcompanion/)) to [HACS](https://hacs.xyz/) in the settings menu of HACS first. You will find the custom component in the integration menu afterwards, look for 'Xiaomi Mi and Aqara Air Conditioning Companion Integration'. Alternatively, you can install it manually by copying the custom_component folder to your Home Assistant configuration folder.
+
+
 ## Setup
 
 ```yaml
