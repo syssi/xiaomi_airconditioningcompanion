@@ -12,7 +12,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
 from homeassistant.const import (
     STATE_ON
 )
@@ -199,7 +199,7 @@ class OperationMode(enum.Enum):
     Off = HVAC_MODE_OFF
 
 
-class XiaomiAirConditioningCompanion(ClimateDevice):
+class XiaomiAirConditioningCompanion(ClimateEntity):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
     def __init__(
