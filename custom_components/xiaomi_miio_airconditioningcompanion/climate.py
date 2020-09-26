@@ -484,6 +484,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             if result:
                 self._state = False
                 self._hvac_mode = HVAC_MODE_OFF
+                yield from self._send_configuration()
         else:
             self._hvac_mode = OperationMode(hvac_mode).value
             self._state = True
