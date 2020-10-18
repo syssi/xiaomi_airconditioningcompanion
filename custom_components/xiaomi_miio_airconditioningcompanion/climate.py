@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    DOMAIN,
     HVAC_MODES,
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
@@ -50,7 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 SUCCESS = ["ok"]
 
 DEFAULT_NAME = "Xiaomi AC Companion"
-DATA_KEY = "climate.xiaomi_miio"
+DATA_KEY = "climate.xiaomi_miio_airpurifier"
+DOMAIN = "xiaomi_miio_airpurifier"
 TARGET_TEMPERATURE_STEP = 1
 
 DEFAULT_TIMEOUT = 10
@@ -85,8 +85,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_LEARN_COMMAND = "xiaomi_miio_learn_command"
-SERVICE_SEND_COMMAND = "xiaomi_miio_send_command"
+SERVICE_LEARN_COMMAND = "climate_learn_command"
+SERVICE_SEND_COMMAND = "climate_send_command"
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
