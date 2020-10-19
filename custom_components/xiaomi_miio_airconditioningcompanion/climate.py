@@ -4,44 +4,42 @@ Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner)
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.xiaomi_miio
 """
+import asyncio
 import enum
 import logging
-import asyncio
-from functools import partial
 from datetime import timedelta
-import voluptuous as vol
+from functools import partial
 
-from homeassistant.core import callback
-from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
-from homeassistant.const import (
-    STATE_ON
-)
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODES,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
-    SUPPORT_SWING_MODE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    HVAC_MODES,
     SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
     CONF_HOST,
-    CONF_TOKEN,
+    CONF_NAME,
     CONF_TIMEOUT,
+    CONF_TOKEN,
+    STATE_ON,
     TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MIN_TEMP, default=16): vol.Coerce(int),
         vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
-        vol.Optional(CONF_POWER_SENSOR): cv.entity_id
+        vol.Optional(CONF_POWER_SENSOR): cv.entity_id,
     }
 )
 
@@ -152,7 +150,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         raise PlatformNotReady
 
     air_conditioning_companion = XiaomiAirConditioningCompanion(
-        hass, name, device, unique_id, sensor_entity_id, power_sensor_entity_id, min_temp, max_temp
+        hass,
+        name,
+        device,
+        unique_id,
+        sensor_entity_id,
+        power_sensor_entity_id,
+        min_temp,
+        max_temp,
     )
     hass.data[DATA_KEY][host] = air_conditioning_companion
     async_add_devices([air_conditioning_companion], update_before_add=True)
@@ -203,7 +208,15 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
     """Representation of a Xiaomi Air Conditioning Companion."""
 
     def __init__(
-        self, hass, name, device, unique_id, sensor_entity_id, power_sensor_entity_id, min_temp, max_temp
+        self,
+        hass,
+        name,
+        device,
+        unique_id,
+        sensor_entity_id,
+        power_sensor_entity_id,
+        min_temp,
+        max_temp,
     ):
 
         """Initialize the climate device."""
@@ -242,7 +255,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 self._async_update_temp(sensor_state)
 
         if power_sensor_entity_id:
-            async_track_state_change(hass, power_sensor_entity_id, self._async_power_sensor_changed)
+            async_track_state_change(
+                hass, power_sensor_entity_id, self._async_power_sensor_changed
+            )
             sensor_state = hass.states.get(power_sensor_entity_id)
             if sensor_state:
                 self._async_update_power_state(sensor_state)
@@ -503,11 +518,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     @asyncio.coroutine
     def _send_configuration(self):
-        from miio.airconditioningcompanion import (
-            Power,
-            Led,
-            OperationMode as MiioOperationMode,
-        )
+        from miio.airconditioningcompanion import Led
+        from miio.airconditioningcompanion import OperationMode as MiioOperationMode
+        from miio.airconditioningcompanion import Power
 
         if self._air_condition_model is not None:
             yield from self._try_command(
