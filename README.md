@@ -65,21 +65,21 @@ logger:
 
 ## Platform services
 
-#### Service `climate.xiaomi_miio_learn_command`
+#### Service `xiaomi_miio_airconditioningcompanion.climate_learn_command`
 
 Capture an infrared command.
 
 | Service data attribute    | Optional | Description                                                          |
 |---------------------------|----------|----------------------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `entity_id`               |       no | Only act on a specific Xiaomi miIO fan entity.                       |
 | `slot`                    |      yes | Storage slot. Defaults to slot ID 30.                                |
 | `timeout`                 |      yes | Capturing timeout. Defaults to 10 seconds.                           |
 
-#### Service `climate.xiaomi_miio_send_command`
+#### Service `xiaomi_miio_airconditioningcompanion.climate_send_command`
 
 Send captured infrared command or device configuration.
 
 | Service data attribute    | Optional | Description                                                          |
 |---------------------------|----------|----------------------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `entity_id`               |       no | Only act on a specific Xiaomi miIO fan entity.                       |
 | `command`                 |       no | Infrared command. Must start with `FE` or `01`.                      |
