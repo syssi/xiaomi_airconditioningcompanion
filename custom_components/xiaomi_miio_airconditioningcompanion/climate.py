@@ -47,8 +47,8 @@ _LOGGER = logging.getLogger(__name__)
 SUCCESS = ["ok"]
 
 DEFAULT_NAME = "Xiaomi AC Companion"
-DATA_KEY = "climate.xiaomi_miio_airpurifier"
-DOMAIN = "xiaomi_miio_airpurifier"
+DATA_KEY = "climate.xiaomi_miio_airconditioningcompanion"
+DOMAIN = "xiaomi_miio_airconditioningcompanion"
 TARGET_TEMPERATURE_STEP = 1
 
 DEFAULT_TIMEOUT = 10
