@@ -8,6 +8,8 @@ This is a custom component for home assistant to integrate the Xiaomi Mi and Aqa
 | `acaprtner.v2`    | KTBL02LM     | Xiaomi Mi Air Conditioner Companion     | round    |
 | `acpartner.v3`    | KTBL11LM     | Aqara Air Conditioning Companion        | square   |
 
+Unsupported devices: `lumi.acpartner.mcn02`
+
 Please follow the instructions on [Retrieving the Access Token](https://www.home-assistant.io/components/vacuum.xiaomi_miio/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
 
 Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
