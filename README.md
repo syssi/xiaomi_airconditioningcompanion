@@ -53,7 +53,7 @@ If the custom component doesn't work out of the box for your device please updat
 logger:
   default: warn
   logs:
-    custom_components.xiaomi_miio_airconditioningcompanion.climate: debug
+    custom_components.xiaomi_miio_airconditioningcompanion: debug
     miio: debug
 ```
 
