@@ -27,6 +27,12 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
   - fan_speed
   - swing_mode
 
+
+## Install
+
+You can install this custom component by adding this repository ([https://github.com/syssi/xiaomi_airconditioningcompanion](https://github.com/syssi/xiaomi_airconditioningcompanion/)) to [HACS](https://hacs.xyz/) in the settings menu of HACS first. You will find the custom component in the integration menu afterwards, look for 'Xiaomi Mi and Aqara Air Conditioning Companion Integration'. Alternatively, you can install it manually by copying the custom_component folder to your Home Assistant configuration folder.
+
+
 ## Setup
 
 ```yaml
@@ -59,21 +65,21 @@ logger:
 
 ## Platform services
 
-#### Service `climate.xiaomi_miio_learn_command`
+#### Service `xiaomi_miio_airconditioningcompanion.climate_learn_command`
 
 Capture an infrared command.
 
 | Service data attribute    | Optional | Description                                                          |
 |---------------------------|----------|----------------------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `entity_id`               |       no | Only act on a specific Xiaomi miIO fan entity.                       |
 | `slot`                    |      yes | Storage slot. Defaults to slot ID 30.                                |
 | `timeout`                 |      yes | Capturing timeout. Defaults to 10 seconds.                           |
 
-#### Service `climate.xiaomi_miio_send_command`
+#### Service `xiaomi_miio_airconditioningcompanion.climate_send_command`
 
 Send captured infrared command or device configuration.
 
 | Service data attribute    | Optional | Description                                                          |
 |---------------------------|----------|----------------------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.               |
+| `entity_id`               |       no | Only act on a specific Xiaomi miIO fan entity.                       |
 | `command`                 |       no | Infrared command. Must start with `FE` or `01`.                      |

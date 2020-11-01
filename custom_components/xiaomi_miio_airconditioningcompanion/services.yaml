@@ -1,0 +1,21 @@
+climate_learn_command:
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  fields:
+    entity_id:
+      description: "Name of the entity to learn command from."
+      example: "xiaomi_miio_airconditioningcompanion.xiaomi_miio_device"
+    slot:
+      description: "Define the slot used to save the IR command. Defaults to slot ID 30."
+      example: "30"
+    timeout:
+      description: "Define the timeout in seconds, before which the command must be learned."
+      example: "30"
+
+climate_send_command:
+  description: 'Send captured infrared command or device configuration.'
+  fields:
+    entity_id:
+      description: "Name of the acpartner entity."
+      example: "xiaomi_miio_airconditioningcompanion.xiaomi_miio_device"
+    command:
+      description: "Infrared command. Must start with FE or 01."
