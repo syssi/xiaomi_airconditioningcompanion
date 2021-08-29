@@ -4,9 +4,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/syssi/xiaomi_airconditioningcompanion)
 ![GitHub forks](https://img.shields.io/github/forks/syssi/xiaomi_airconditioningcompanion)
 ![GitHub watchers](https://img.shields.io/github/watchers/syssi/xiaomi_airconditioningcompanion)
-<span class="badge-buymeacoffee">
-<a href="https://www.buymeacoffee.com/syssi" title="Donate to this project using Buy Me A Coffee"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg" alt="Buy Me A Coffee donate button" /></a>
-</span>
+[!["Buy Me A Coffee"](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://www.buymeacoffee.com/syssi)
 
 This is a custom component for home assistant to integrate the Xiaomi Mi and Aqara Air Conditioning Companion:
 
