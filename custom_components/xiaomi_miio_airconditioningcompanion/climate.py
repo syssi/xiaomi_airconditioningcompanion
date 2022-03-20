@@ -7,6 +7,7 @@ https://home-assistant.io/components/climate.xiaomi_miio
 import asyncio
 import enum
 import logging
+import time
 from datetime import timedelta
 from functools import partial
 
@@ -24,6 +25,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    DEFAULT_NUM_REPEATS,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -99,7 +106,13 @@ SERVICE_SCHEMA_LEARN_COMMAND = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_SEND_COMMAND = SERVICE_SCHEMA.extend(
-    {vol.Optional(CONF_COMMAND): cv.string}
+    {
+        vol.Optional(CONF_COMMAND): cv.string,
+        vol.Optional(
+            ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
+        ): cv.positive_int,
+        vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+    }
 )
 
 SERVICE_TO_METHOD = {
@@ -572,27 +585,36 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         )
 
     @asyncio.coroutine
-    def async_send_command(self, command):
+    def async_send_command(self, command, **kwargs):
         """Send a infrared command."""
-        if command.startswith("01"):
-            yield from self._try_command(
-                "Sending new air conditioner configuration failed.",
-                self._device.send_command,
-                command,
-            )
-        elif command.startswith("FE"):
-            if self._air_condition_model is not None:
-                # Learned infrared commands has the prefix 'FE'
+        repeat = kwargs[ATTR_NUM_REPEATS]
+        delay = kwargs[ATTR_DELAY_SECS]
+        first_command = True
+        for _ in range(repeat):
+            if not first_command:
+                time.sleep(delay)
+
+            if command.startswith("01"):
                 yield from self._try_command(
-                    "Sending custom infrared command failed.",
-                    self._device.send_ir_code,
-                    self._air_condition_model,
+                    "Sending new air conditioner configuration failed.",
+                    self._device.send_command,
                     command,
                 )
+            elif command.startswith("FE"):
+                if self._air_condition_model is not None:
+                    # Learned infrared commands has the prefix 'FE'
+                        yield from self._try_command(
+                            "Sending custom infrared command failed.",
+                            self._device.send_ir_code,
+                            self._air_condition_model,
+                            command,
+                        )
+                else:
+                    _LOGGER.error(
+                        "Model number of the air condition unknown. "
+                        "IR command cannot be sent."
+                    )
             else:
-                _LOGGER.error(
-                    "Model number of the air condition unknown. "
-                    "IR command cannot be sent."
-                )
-        else:
-            _LOGGER.error("Invalid IR command.")
+                _LOGGER.error("Invalid IR command.")
+                            
+            first_command = False
