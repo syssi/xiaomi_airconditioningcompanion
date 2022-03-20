@@ -108,9 +108,7 @@ SERVICE_SCHEMA_LEARN_COMMAND = SERVICE_SCHEMA.extend(
 SERVICE_SCHEMA_SEND_COMMAND = SERVICE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND): cv.string,
-        vol.Optional(
-            ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
-        ): cv.positive_int,
+        vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
         vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
     }
 )
@@ -603,12 +601,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             elif command.startswith("FE"):
                 if self._air_condition_model is not None:
                     # Learned infrared commands has the prefix 'FE'
-                        yield from self._try_command(
-                            "Sending custom infrared command failed.",
-                            self._device.send_ir_code,
-                            self._air_condition_model,
-                            command,
-                        )
+                    yield from self._try_command(
+                        "Sending custom infrared command failed.",
+                        self._device.send_ir_code,
+                        self._air_condition_model,
+                        command,
+                    )
                 else:
                     _LOGGER.error(
                         "Model number of the air condition unknown. "
@@ -616,5 +614,5 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                     )
             else:
                 _LOGGER.error("Invalid IR command.")
-                            
+
             first_command = False
