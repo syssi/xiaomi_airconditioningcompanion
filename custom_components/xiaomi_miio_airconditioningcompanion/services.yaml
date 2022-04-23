@@ -19,3 +19,21 @@ climate_send_command:
       example: "xiaomi_miio_airconditioningcompanion.xiaomi_miio_device"
     command:
       description: "Infrared command. Must start with FE or 01."
+    num_repeats:
+      name: Repeats
+      description: The number of times you want to repeat the command(s).
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+    delay_secs:
+      name: Delay Seconds
+      description: The time you want to wait in between repeated commands.
+      default: 0.4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
