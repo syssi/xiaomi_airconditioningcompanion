@@ -196,7 +196,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             update_tasks.append(device.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service].get("schema", SERVICE_SCHEMA)
