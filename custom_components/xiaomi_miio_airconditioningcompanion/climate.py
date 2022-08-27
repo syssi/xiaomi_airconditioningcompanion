@@ -574,7 +574,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 yield from self.hass.async_add_job(self._device.learn_stop, slot)
                 return
 
-            yield from asyncio.sleep(1, loop=self.hass.loop)
+            yield from asyncio.sleep(1)
 
         yield from self.hass.async_add_job(self._device.learn_stop, slot)
         _LOGGER.error("Timeout. No infrared command captured")
