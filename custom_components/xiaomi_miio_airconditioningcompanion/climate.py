@@ -126,7 +126,6 @@ SERVICE_TO_METHOD = {
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the air conditioning companion from config."""
     from miio import AirConditioningCompanion, DeviceException
@@ -297,14 +296,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         else:
             yield from self.async_turn_off()
 
-    @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
         if new_state is None:
             return
         self._async_update_temp(new_state)
 
-    @asyncio.coroutine
     def _async_power_sensor_changed(self, entity_id, old_state, new_state):
         """Handle power sensor changes."""
         if new_state is None:
@@ -312,7 +309,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
         yield from self._async_update_power_state(new_state)
 
-    @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a AC companion command handling error messages."""
         from miio import DeviceException
@@ -328,7 +324,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             self._available = False
             return False
 
-    @asyncio.coroutine
     def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the miio device on."""
         result = yield from self._try_command(
@@ -338,7 +333,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         if result:
             self._state = True
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs) -> None:
         """Turn the miio device off."""
         result = yield from self._try_command(
@@ -348,7 +342,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         if result:
             self._state = False
 
-    @asyncio.coroutine
     def async_update(self):
         """Update the state of this climate device."""
         from miio import DeviceException
@@ -473,7 +466,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
         return [speed.name.lower() for speed in FanSpeed]
 
-    @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
@@ -483,7 +475,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
         yield from self._send_configuration()
 
-    @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
         from miio.airconditioningcompanion import SwingMode
@@ -491,7 +482,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         self._swing_mode = SwingMode[swing_mode.title()]
         yield from self._send_configuration()
 
-    @asyncio.coroutine
     def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
         from miio.airconditioningcompanion import FanSpeed
@@ -499,7 +489,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         self._fan_mode = FanSpeed[fan_mode.title()]
         yield from self._send_configuration()
 
-    @asyncio.coroutine
     def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == OperationMode.Off.value:
@@ -527,7 +516,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
         return [mode.name.lower() for mode in SwingMode]
 
-    @asyncio.coroutine
     def _send_configuration(self):
         from miio.airconditioningcompanion import Led
         from miio.airconditioningcompanion import OperationMode as MiioOperationMode
@@ -553,7 +541,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 "Configuration cannot be sent."
             )
 
-    @asyncio.coroutine
     def async_learn_command(self, slot, timeout):
         """Learn a infrared command."""
         yield from self.hass.async_add_job(self._device.learn, slot)
@@ -582,7 +569,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
-    @asyncio.coroutine
     def async_send_command(self, command, **kwargs):
         """Send a infrared command."""
         repeat = kwargs[ATTR_NUM_REPEATS]
