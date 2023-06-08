@@ -292,9 +292,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         if state.state is None:
             return
         if state.state == STATE_ON:
-            yield from self.async_turn_on()
+            await self.async_turn_on()
         else:
-            yield from self.async_turn_off()
+            await self.async_turn_off()
 
     async def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
@@ -307,14 +307,14 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         if new_state is None:
             return
 
-        yield from self._async_update_power_state(new_state)
+        await self._async_update_power_state(new_state)
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a AC companion command handling error messages."""
         from miio import DeviceException
 
         try:
-            result = yield from self.hass.async_add_job(partial(func, *args, **kwargs))
+            result = await self.hass.async_add_job(partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received: %s", result)
 
@@ -326,7 +326,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the miio device on."""
-        result = yield from self._try_command(
+        result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
         )
 
@@ -335,7 +335,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the miio device off."""
-        result = yield from self._try_command(
+        result = await self._try_command(
             "Turning the miio device off failed.", self._device.off
         )
 
@@ -347,7 +347,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         from miio import DeviceException
 
         try:
-            state = yield from self.hass.async_add_job(self._device.status)
+            state = await self.hass.async_add_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -473,36 +473,36 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         if kwargs.get(ATTR_HVAC_MODE) is not None:
             self._hvac_mode = OperationMode(kwargs.get(ATTR_HVAC_MODE))
 
-        yield from self._send_configuration()
+        await self._send_configuration()
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
         from miio.airconditioningcompanion import SwingMode
 
         self._swing_mode = SwingMode[swing_mode.title()]
-        yield from self._send_configuration()
+        await self._send_configuration()
 
     async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
         from miio.airconditioningcompanion import FanSpeed
 
         self._fan_mode = FanSpeed[fan_mode.title()]
-        yield from self._send_configuration()
+        await self._send_configuration()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == OperationMode.Off.value:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the miio device off failed.", self._device.off
             )
             if result:
                 self._state = False
                 self._hvac_mode = HVAC_MODE_OFF
-                yield from self._send_configuration()
+                await self._send_configuration()
         else:
             self._hvac_mode = OperationMode(hvac_mode).value
             self._state = True
-            yield from self._send_configuration()
+            await self._send_configuration()
 
     @property
     def swing_mode(self):
@@ -522,7 +522,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         from miio.airconditioningcompanion import Power
 
         if self._air_condition_model is not None:
-            yield from self._try_command(
+            await self._try_command(
                 "Sending new air conditioner configuration failed.",
                 self._device.send_configuration,
                 self._air_condition_model,
@@ -543,12 +543,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_learn_command(self, slot, timeout):
         """Learn a infrared command."""
-        yield from self.hass.async_add_job(self._device.learn, slot)
+        await self.hass.async_add_job(self._device.learn, slot)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            message = yield from self.hass.async_add_job(self._device.learn_result)
+            message = await self.hass.async_add_job(self._device.learn_result)
             # FIXME: Improve python-miio here?
             message = message[0]
             _LOGGER.debug("Message received from device: '%s'", message)
@@ -558,12 +558,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 self.hass.components.persistent_notification.async_create(
                     log_msg, title="Xiaomi Miio Remote"
                 )
-                yield from self.hass.async_add_job(self._device.learn_stop, slot)
+                await self.hass.async_add_job(self._device.learn_stop, slot)
                 return
 
-            yield from asyncio.sleep(1)
+            await asyncio.sleep(1)
 
-        yield from self.hass.async_add_job(self._device.learn_stop, slot)
+        await self.hass.async_add_job(self._device.learn_stop, slot)
         _LOGGER.error("Timeout. No infrared command captured")
         self.hass.components.persistent_notification.async_create(
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
@@ -579,7 +579,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 time.sleep(delay)
 
             if command.startswith("01"):
-                yield from self._try_command(
+                await self._try_command(
                     "Sending new air conditioner configuration failed.",
                     self._device.send_command,
                     command,
@@ -587,7 +587,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             elif command.startswith("FE"):
                 if self._air_condition_model is not None:
                     # Learned infrared commands has the prefix 'FE'
-                    yield from self._try_command(
+                    await self._try_command(
                         "Sending custom infrared command failed.",
                         self._device.send_ir_code,
                         self._air_condition_model,
