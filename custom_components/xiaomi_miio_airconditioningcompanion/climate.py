@@ -287,7 +287,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
     @callback
-    def _async_update_power_state(self, state):
+    async def _async_update_power_state(self, state):
         """Update thermostat with latest state from power sensor."""
         if state.state is None:
             return
