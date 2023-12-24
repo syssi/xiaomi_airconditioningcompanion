@@ -1,0 +1,44 @@
+{
+  "services": {
+    "climate_learn_command": {
+      "name": "Learn command",
+      "description": "Learn an IR command, press \"Call Service\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the xiaomi miio airconditioningcompanion entity."
+        },
+        "slot": {
+          "name": "Slot",
+          "description": "Define the slot used to save the IR command. Defaults to slot ID 30."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Define the timeout in seconds, before which the command must be learned."
+        }
+      }
+    },
+    "climate_send_command": {
+      "name": "Send command",
+      "description": "Send captured infrared command or device configuration.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the xiaomi miio airconditioningcompanion entity."
+        },
+        "command": {
+          "name": "Command",
+          "description": "Infrared command. Must start with FE or 01."
+        },
+        "num_repeats": {
+          "name": "Repeats",
+          "description": "The number of times you want to repeat the command(s)."
+        },
+        "delay_secs": {
+          "name": "Delay Seconds",
+          "description": "The time you want to wait in between repeated commands."
+        }
+      }
+    }
+  }
+}
