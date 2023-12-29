@@ -74,6 +74,9 @@ CONF_MAX_TEMP = "max_temp"
 CONF_SLOT = "slot"
 CONF_COMMAND = "command"
 CONF_POWER_SENSOR = "power_sensor"
+CONF_HEAT_RELAY = "heat_relay"
+CONF_HEAT_THRESHOLD = "heat_threshold"
+CONF_COOL_THRESHOLD = "cool_threshold"
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -86,6 +89,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MIN_TEMP, default=16): vol.Coerce(int),
         vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
         vol.Optional(CONF_POWER_SENSOR): cv.entity_id,
+        vol.Optional(CONF_HEAT_RELAY, default=None): cv.entity_id,
+        vol.Optional(CONF_HEAT_THRESHOLD, default=0.5): vol.Coerce(float),
+        vol.Optional(CONF_COOL_THRESHOLD, default=2): vol.Coerce(float),
     }
 )
 
@@ -140,6 +146,9 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     max_temp = config.get(CONF_MAX_TEMP)
     sensor_entity_id = config.get(CONF_SENSOR)
     power_sensor_entity_id = config.get(CONF_POWER_SENSOR)
+    heat_relay_entity_id = config.get(CONF_HEAT_RELAY)
+    heat_threshold = config.get(CONF_HEAT_THRESHOLD)
+    cool_threshold = config.get(CONF_COOL_THRESHOLD)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -167,6 +176,9 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         power_sensor_entity_id,
         min_temp,
         max_temp,
+        heat_relay_entity_id,
+        heat_threshold,
+        cool_threshold,
     )
     hass.data[DATA_KEY][host] = air_conditioning_companion
     async_add_devices([air_conditioning_companion], update_before_add=True)
@@ -226,6 +238,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         power_sensor_entity_id,
         min_temp,
         max_temp,
+        heat_relay_entity_id,
+        heat_threshold,
+        cool_threshold,
     ):
 
         """Initialize the climate device."""
@@ -235,6 +250,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         self._unique_id = unique_id
         self._sensor_entity_id = sensor_entity_id
         self._power_sensor_entity_id = power_sensor_entity_id
+        self._heat_relay_entity_id = heat_relay_entity_id
+        self._heat_threshold = heat_threshold
+        self._cool_threshold = cool_threshold
 
         self._available = False
         self._state = None
@@ -283,6 +301,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             self._current_temperature = self.hass.config.units.temperature(
                 float(state.state), unit
             )
+            self._hvac_required()
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
@@ -312,6 +331,26 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a AC companion command handling error messages."""
         from miio import DeviceException
+        from miio.airconditioningcompanion import Led
+        from miio.airconditioningcompanion import OperationMode as MiioOperationMode
+        from miio.airconditioningcompanion import Power
+
+        if self._hvac_mode == HVAC_MODE_HEAT and self._heat_relay_entity_id is not None:
+            # send config without powering ON the AC unit
+            await self.hass.async_add_job(
+                                           partial(
+                                               self._device.send_configuration,
+                                               self._air_condition_model,
+                                               Power(0),
+                                               MiioOperationMode[OperationMode(self._hvac_mode).name],
+                                               int(self._target_temperature),
+                                               self._fan_mode,
+                                               self._swing_mode,
+                                               Led.Off
+                                           )
+                                       )
+            self._heating_on()
+            return True
 
         try:
             result = await self.hass.async_add_job(partial(func, *args, **kwargs))
@@ -358,12 +397,14 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                     ATTR_TEMPERATURE: state.target_temperature,
                     ATTR_SWING_MODE: state.swing_mode.name.lower(),
                     ATTR_FAN_MODE: state.fan_speed.name.lower(),
-                    ATTR_HVAC_MODE: state.mode.name.lower() if self._state else "off",
+                    ATTR_HVAC_MODE: state.mode.name.lower(),
                     ATTR_LED: state.led,
                 }
             )
             self._last_on_operation = OperationMode[state.mode.name].value
-            if state.power == "off":
+            if self._hvac_mode == HVAC_MODE_HEAT:
+                self._state = True
+            elif state.power == "off":
                 self._hvac_mode = HVAC_MODE_OFF
                 self._state = False
             else:
@@ -378,6 +419,33 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    def _hvac_required(self):
+        if self._target_temperature is None or self._current_temperature is None: return
+        temperature_difference = self._target_temperature - self._current_temperature
+
+        if temperature_difference >= self._heat_threshold:
+            self._hvac_mode = OperationMode(HVAC_MODE_HEAT).value
+            self._state = True
+            self._heating_on()
+        elif abs(temperature_difference) >= self._cool_threshold:
+            self._hvac_mode = OperationMode(HVAC_MODE_COOL).value
+            self._state = True
+        else:
+            self._state = False
+            self._hvac_mode = OperationMode(HVAC_MODE_OFF).value
+            self._heating_off()
+
+    def _heating_on(self):
+        if self._heat_relay_entity_id is None: return
+        if self._heating_status() == 'off': self.hass.bus.fire("relay.on", { "entity_id": self._heat_relay_entity_id })
+
+    def _heating_off(self):
+        if self._heat_relay_entity_id is None: return
+        if self._heating_status() == 'on': self.hass.bus.fire("relay.off", { "entity_id": self._heat_relay_entity_id })
+
+    def _heating_status(self):
+        return self.hass.states.get(self._heat_relay_entity_id).state
 
     @property
     def supported_features(self):
@@ -472,6 +540,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if kwargs.get(ATTR_HVAC_MODE) is not None:
             self._hvac_mode = OperationMode(kwargs.get(ATTR_HVAC_MODE))
+        self._hvac_required()
 
         await self._send_configuration()
 
@@ -492,6 +561,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == OperationMode.Off.value:
+            self._state = False
+            self._hvac_mode = HVAC_MODE_OFF
+            self._heating_off()
             result = await self._try_command(
                 "Turning the miio device off failed.", self._device.off
             )
@@ -520,6 +592,8 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         from miio.airconditioningcompanion import Led
         from miio.airconditioningcompanion import OperationMode as MiioOperationMode
         from miio.airconditioningcompanion import Power
+
+        if self.hvac_mode is None: self._hvac_mode = HVAC_MODE_OFF
 
         if self._air_condition_model is not None:
             await self._try_command(
