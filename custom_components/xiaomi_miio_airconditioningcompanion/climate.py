@@ -431,7 +431,8 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         elif abs(temperature_difference) >= self._cool_threshold:
             self._hvac_mode = OperationMode(HVAC_MODE_COOL).value
             self._state = True
-        else:
+            self._heating_off()
+        elif temperature_difference <= 0:
             self._state = False
             self._hvac_mode = OperationMode(HVAC_MODE_OFF).value
             self._heating_off()
