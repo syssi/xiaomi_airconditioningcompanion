@@ -60,7 +60,11 @@ ATTR_FAN_MODE = "fan_mode"
 ATTR_LOAD_POWER = "load_power"
 ATTR_LED = "led"
 
-SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE
+SUPPORT_FLAGS = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.SWING_MODE
+)
 
 CONF_SENSOR = "target_sensor"
 CONF_MIN_TEMP = "min_temp"
