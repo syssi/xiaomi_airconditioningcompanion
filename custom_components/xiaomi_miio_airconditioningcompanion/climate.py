@@ -4,6 +4,7 @@ Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner)
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.xiaomi_miio
 """
+
 import asyncio
 import enum
 import logging
@@ -227,7 +228,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         min_temp,
         max_temp,
     ):
-
         """Initialize the climate device."""
         self.hass = hass
         self._name = name
@@ -527,9 +527,11 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 self._device.send_configuration,
                 self._air_condition_model,
                 Power(int(self._state)),
-                MiioOperationMode[OperationMode(self._hvac_mode).name]
-                if self._state
-                else MiioOperationMode[OperationMode(self._last_on_operation).name],
+                (
+                    MiioOperationMode[OperationMode(self._hvac_mode).name]
+                    if self._state
+                    else MiioOperationMode[OperationMode(self._last_on_operation).name]
+                ),
                 int(self._target_temperature),
                 self._fan_mode,
                 self._swing_mode,
