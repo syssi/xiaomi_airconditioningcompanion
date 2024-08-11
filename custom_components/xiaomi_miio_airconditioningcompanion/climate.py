@@ -64,6 +64,8 @@ SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.SWING_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 
 CONF_SENSOR = "target_sensor"
