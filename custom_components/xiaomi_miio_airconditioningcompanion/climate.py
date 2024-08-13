@@ -346,7 +346,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         from miio import DeviceException
 
         try:
-            state = await self.hass.async_add_job(self._device.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -544,12 +544,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_learn_command(self, slot, timeout):
         """Learn a infrared command."""
-        await self.hass.async_add_job(self._device.learn, slot)
+        await self.hass.async_add_executor_job(self._device.learn, slot)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            message = await self.hass.async_add_job(self._device.learn_result)
+            message = await self.hass.async_add_executor_job(self._device.learn_result)
             # FIXME: Improve python-miio here?
             message = message[0]
             _LOGGER.debug("Message received from device: '%s'", message)
@@ -559,12 +559,12 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 self.hass.components.persistent_notification.async_create(
                     log_msg, title="Xiaomi Miio Remote"
                 )
-                await self.hass.async_add_job(self._device.learn_stop, slot)
+                await self.hass.async_add_executor_job(self._device.learn_stop, slot)
                 return
 
             await asyncio.sleep(1)
 
-        await self.hass.async_add_job(self._device.learn_stop, slot)
+        await self.hass.async_add_executor_job(self._device.learn_stop, slot)
         _LOGGER.error("Timeout. No infrared command captured")
         self.hass.components.persistent_notification.async_create(
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
