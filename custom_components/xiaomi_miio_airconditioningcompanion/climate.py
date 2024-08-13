@@ -315,7 +315,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         from miio import DeviceException
 
         try:
-            result = await self.hass.async_add_job(partial(func, *args, **kwargs))
+            result = await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received: %s", result)
 
