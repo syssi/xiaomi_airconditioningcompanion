@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -257,13 +257,15 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         self._target_temperature = None
 
         if sensor_entity_id:
-            async_track_state_change(hass, sensor_entity_id, self._async_sensor_changed)
+            async_track_state_change_event(
+                hass, sensor_entity_id, self._async_sensor_changed
+            )
             sensor_state = hass.states.get(sensor_entity_id)
             if sensor_state:
                 self._async_update_temp(sensor_state)
 
         if power_sensor_entity_id:
-            async_track_state_change(
+            async_track_state_change_event(
                 hass, power_sensor_entity_id, self._async_power_sensor_changed
             )
             sensor_state = hass.states.get(power_sensor_entity_id)
