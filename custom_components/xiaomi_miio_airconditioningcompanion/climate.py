@@ -297,8 +297,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         else:
             await self.async_turn_off()
 
-    async def _async_sensor_changed(self, entity_id, old_state, new_state):
+    async def _async_sensor_changed(self, event):
         """Handle temperature changes."""
+        new_state = event.data["new_state"]
         if new_state is None:
             return
         self._async_update_temp(new_state)
