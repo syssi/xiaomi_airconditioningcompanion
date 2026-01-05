@@ -559,8 +559,10 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             if message.startswith("FE"):
                 log_msg = "Received command is: {}".format(message)
                 _LOGGER.info(log_msg)
-                self.hass.components.persistent_notification.async_create(
-                    log_msg, title="Xiaomi Miio Remote"
+                self.hass.async_create_task(
+                    self.hass.services.async_call(
+                        "persistent_notification", "create", {"message": log_msg, "title": "Xiaomi Miio Remote"}
+                    )
                 )
                 await self.hass.async_add_executor_job(self._device.learn_stop, slot)
                 return
