@@ -74,6 +74,7 @@ CONF_MAX_TEMP = "max_temp"
 CONF_SLOT = "slot"
 CONF_COMMAND = "command"
 CONF_POWER_SENSOR = "power_sensor"
+CONF_LED = "led"
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -86,6 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MIN_TEMP, default=16): vol.Coerce(int),
         vol.Optional(CONF_MAX_TEMP, default=30): vol.Coerce(int),
         vol.Optional(CONF_POWER_SENSOR): cv.entity_id,
+        vol.Optional(CONF_LED, default=True): cv.boolean,
     }
 )
 
@@ -140,6 +142,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     max_temp = config.get(CONF_MAX_TEMP)
     sensor_entity_id = config.get(CONF_SENSOR)
     power_sensor_entity_id = config.get(CONF_POWER_SENSOR)
+    led = config.get(CONF_LED)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -167,6 +170,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         power_sensor_entity_id,
         min_temp,
         max_temp,
+        led,
     )
     hass.data[DATA_KEY][host] = air_conditioning_companion
     async_add_devices([air_conditioning_companion], update_before_add=True)
@@ -226,6 +230,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         power_sensor_entity_id,
         min_temp,
         max_temp,
+        led=True,
     ):
         """Initialize the climate device."""
         self.hass = hass
@@ -234,6 +239,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
         self._unique_id = unique_id
         self._sensor_entity_id = sensor_entity_id
         self._power_sensor_entity_id = power_sensor_entity_id
+        self._led = led
 
         self._available = False
         self._state = None
@@ -539,7 +545,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
                 int(self._target_temperature),
                 self._fan_mode,
                 self._swing_mode,
-                Led.Off,
+                Led.On if self._led else Led.Off,
             )
         else:
             _LOGGER.error(
