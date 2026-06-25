@@ -1,5 +1,4 @@
-"""
-Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner)
+"""Support for Xiaomi Mi Home Air Conditioner Companion (AC Partner).
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.xiaomi_miio
@@ -41,6 +40,9 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.dt import utcnow
+from miio import AirConditioningCompanion, DeviceException
+from miio.airconditioningcompanion import FanSpeed, Led, Power, SwingMode
+from miio.airconditioningcompanion import OperationMode as MiioOperationMode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,8 +132,6 @@ SERVICE_TO_METHOD = {
 # pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the air conditioning companion from config."""
-    from miio import AirConditioningCompanion, DeviceException
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -150,7 +150,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         device = AirConditioningCompanion(host, token)
         device_info = device.info()
         model = device_info.model
-        unique_id = "{}-{}".format(model, device_info.mac_address)
+        unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
             "%s %s %s detected",
             model,
@@ -159,7 +159,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         )
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     air_conditioning_companion = XiaomiAirConditioningCompanion(
         hass,
@@ -201,14 +201,16 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         if update_tasks:
             await asyncio.wait(update_tasks)
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get("schema", SERVICE_SCHEMA)
+    for service, value in SERVICE_TO_METHOD.items():
+        schema = value.get("schema", SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=schema
         )
 
 
 class OperationMode(enum.Enum):
+    """Supported HVAC operation modes."""
+
     Heat = HVACMode.HEAT
     Cool = HVACMode.COOL
     Auto = HVACMode.AUTO
@@ -319,8 +321,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a AC companion command handling error messages."""
-        from miio import DeviceException
-
         try:
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
@@ -334,7 +334,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             self._available = False
             return False
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self, speed: str | None = None, **kwargs) -> None:
         """Turn the miio device on."""
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
@@ -354,8 +354,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_update(self):
         """Update the state of this climate device."""
-        from miio import DeviceException
-
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
@@ -456,7 +454,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     @property
     def last_on_operation(self):
-        """Return the last operation when the AC is on (ie heat, cool, fan only)"""
+        """Return the last operation when the AC is on (ie heat, cool, fan only)."""
         return self._last_on_operation
 
     @property
@@ -472,8 +470,6 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        from miio.airconditioningcompanion import FanSpeed
-
         return [speed.name.lower() for speed in FanSpeed]
 
     async def async_set_temperature(self, **kwargs):
@@ -487,15 +483,11 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
-        from miio.airconditioningcompanion import SwingMode
-
         self._swing_mode = SwingMode[swing_mode.title()]
         await self._send_configuration()
 
     async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
-        from miio.airconditioningcompanion import FanSpeed
-
         self._fan_mode = FanSpeed[fan_mode.title()]
         await self._send_configuration()
 
@@ -522,14 +514,9 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
     @property
     def swing_modes(self):
         """List of available swing modes."""
-        from miio.airconditioningcompanion import SwingMode
-
         return [mode.name.lower() for mode in SwingMode]
 
     async def _send_configuration(self):
-        from miio.airconditioningcompanion import Led
-        from miio.airconditioningcompanion import OperationMode as MiioOperationMode
-        from miio.airconditioningcompanion import Power
 
         if self._air_condition_model is not None:
             await self._try_command(
@@ -565,7 +552,7 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
             message = message[0]
             _LOGGER.debug("Message received from device: '%s'", message)
             if message.startswith("FE"):
-                log_msg = "Received command is: {}".format(message)
+                log_msg = f"Received command is: {message}"
                 _LOGGER.info(log_msg)
                 self.hass.async_create_task(
                     self.hass.services.async_call(
