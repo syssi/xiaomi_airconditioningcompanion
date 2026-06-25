@@ -4,4 +4,8 @@ __pycache__/
 *$py.class
 
 .idea/
+.pytest_cache/*
+.coverage
+local/*
+*.bak
 venv/
