@@ -5,14 +5,12 @@ https://home-assistant.io/components/climate.xiaomi_miio
 """
 
 import asyncio
+from datetime import timedelta
 import enum
+from functools import partial
 import logging
 import time
-from datetime import timedelta
-from functools import partial
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -38,11 +36,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.dt import utcnow
 from miio import AirConditioningCompanion, DeviceException
 from miio.airconditioningcompanion import FanSpeed, Led, Power, SwingMode
 from miio.airconditioningcompanion import OperationMode as MiioOperationMode
+import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
