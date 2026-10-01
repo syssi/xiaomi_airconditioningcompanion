@@ -342,6 +342,11 @@ class XiaomiAirConditioningCompanion(ClimateEntity):
 
         if result:
             self._state = True
+            # A plain power-on command doesn't carry the LED flag, unlike
+            # _send_configuration(). Re-send the full configuration so the
+            # configured LED state is applied consistently regardless of
+            # how the AC was turned on.
+            await self._send_configuration()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the miio device off."""
