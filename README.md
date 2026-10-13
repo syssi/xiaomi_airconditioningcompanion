@@ -16,7 +16,7 @@ This is a custom component for home assistant to integrate the Xiaomi Mi and Aqa
 
 Unsupported devices: `lumi.acpartner.mcn02`
 
-Please follow the instructions on [Retrieving the Access Token](https://www.home-assistant.io/components/vacuum.xiaomi_miio/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
+Please follow the instructions on [Retrieving the Access Token](https://www.home-assistant.io/components/vacuum.xiaomi_miio/#retrieving-the-access-token) to get the API token used during setup.
 
 Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
 
@@ -42,6 +42,10 @@ You can install this custom component by adding this repository ([https://github
 
 
 ## Setup
+
+In Home Assistant, go to **Settings > Devices & services**, select **Add Integration**, and search for **Xiaomi Mi and Aqara Air Conditioning Companion**. Enter the device host, API token, and temperature sensor when prompted.
+
+The legacy YAML configuration remains supported:
 
 ```yaml
 # configuration.yaml

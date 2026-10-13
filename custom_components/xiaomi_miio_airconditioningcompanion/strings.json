@@ -1,4 +1,28 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the air conditioning companion",
+        "description": "Enter the local connection details and sensors used by the companion.",
+        "data": {
+          "host": "Host",
+          "token": "API token",
+          "target_sensor": "Temperature sensor",
+          "name": "Name",
+          "min_temp": "Minimum temperature",
+          "max_temp": "Maximum temperature",
+          "power_sensor": "Power sensor",
+          "led": "Enable LED"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host and token, then try again."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
   "services": {
     "climate_learn_command": {
       "name": "Learn command",
